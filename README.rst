@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FOnsetGame%2Fnode_proxy.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FOnsetGame%2Fnode_proxy?ref=badge_shield)
+
 node_proxy - Node proxy is an ORM for rod nodes
 ===============================================
 
@@ -372,3 +374,7 @@ Generated Code
     let proxy5 = MyProxy5.new(node)
     let obj = MyObservarble.new()
     proxy5.obj = obj
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FOnsetGame%2Fnode_proxy.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FOnsetGame%2Fnode_proxy?ref=badge_large)
