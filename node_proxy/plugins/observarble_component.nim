@@ -1,4 +1,4 @@
-import rod / component
+import rod / [component, node]
 import observarble
 
 
@@ -30,3 +30,30 @@ proc subscribe*(c: ObserverComponent, cb: openarray[ObserverHandler]) =
     if c.added:
         for cc in cb:
             c.target.subscribe(c, cc)
+
+registerComponent(ObserverComponent, "Observarble")
+
+
+proc subscribe*(n: Node, o: Observarble, cb: ObserverHandler) =
+    for comp in n.components:
+        if comp of ObserverComponent:
+            let c = comp.ObserverComponent
+            if c.target == o:
+                c.subscribe(cb)
+                return
+
+    let comp = n.addComponent(ObserverComponent)
+    comp.target = o
+    comp.subscribe(cb)
+
+proc subscribe*(n: Node, o: Observarble, cbs: openarray[ObserverHandler]) =
+    for cb in cbs:
+        n.subscribe(o, cb)
+
+proc unsubscribe*(n: Node, o: Observarble) =
+    for comp in n.components:
+        if comp of ObserverComponent:
+            let c = comp.ObserverComponent
+            if c.target == o:
+                n.removeComponent(c)
+                return
