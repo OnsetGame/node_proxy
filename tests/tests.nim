@@ -107,10 +107,10 @@ nodeProxy MyProxy4:
     anim1 Animation {withKey: "nodekey"}
 
     # Animation with key `child1key` attached on child1 node
-    anim2 Animation {withKey: "nodekey", forNode: child1}
+    anim2 Animation {withKey: "child1key", forNode: child1}
 
     # Animation with key `child1key` attached on node with name `child1name`
-    anim3 Animation {withKey: "nodekey", forNode: "child1name"}
+    anim3 Animation {withKey: "child1key", forNode: "child1name"}
 
     # Setup animation
     anim4 Animation {withKey: "nodekey"}:

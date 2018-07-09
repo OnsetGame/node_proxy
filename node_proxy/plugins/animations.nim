@@ -15,10 +15,11 @@ proc withNodeProxyPlugin*(data: NodeProxyPluginData) =
     elif target.kind == nnkStrLit:
         target = quote:
             `NP`.node.findNode(`target`)
-
+    
+    let propNameLit = newLit($propName)
     let oninit = quote:
         `NP`.`propName` = `target`.animationNamed(`key`)
-        assert(`NP`.`propName`.isNil != true, "Animation nil")
+        assert(`NP`.`propName`.isNil != true, "Animation `" & `key` & "` for prop `" & `propNameLit` & "` isNil")
     
     if not oninit.isNil:
         data.init.add(oninit)

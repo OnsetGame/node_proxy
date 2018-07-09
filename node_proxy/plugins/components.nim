@@ -13,10 +13,12 @@ proc onNodeProxyPlugin*(data: NodeProxyPluginData) =
     elif node.kind == nnkStrLit:
         node = quote:
             `NP`.node.findNode(`node`)
-
+    
+    let propNameLit = newLit($propName)
+    let propTypeLit = newLit($propType)
     let oninit = quote:
         `NP`.`propName` = `node`.getComponent(`propType`)
-        assert(`NP`.`propName`.isNil != true, "Component nil")
+        assert(`NP`.`propName`.isNil != true, "Component `" & `propTypeLit` & "` for prop `" & `propNameLit` & "` is nil")
     
     if not oninit.isNil:
         data.init.add(oninit)
@@ -37,9 +39,13 @@ proc onNodeAddNodeProxyPlugin*(data: NodeProxyPluginData) =
         node = quote:
             `NP`.node.findNode(`node`)
 
+    let propNameLit = newLit($propName)
+    let propTypeLit = newLit($propType)
     let oninit = quote:
-        assert(`node`.getComponent(`propType`).isNil, "Component already added")
-        `NP`.`propName` = `node`.component(`propType`)
+        when defined(debugNodeProxy):
+            if not `node`.getComponent(`propType`).isNil:
+                echo "Component `" & `propTypeLit` & "` for prop `" & `propNameLit` & "` has been already added"
+        `NP`.`propName` = `node`.addComponent(`propType`)
     
     if not oninit.isNil:
         data.init.add(oninit)

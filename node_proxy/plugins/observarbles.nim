@@ -51,7 +51,7 @@ proc observeProxyPlugin*(data: NodeProxyPluginData) =
                         let c = `NP`.node.addComponent(ObserverComponent)
                         c.target = `NP`.`pTarget`
                         c.subscribe(
-                            proc(`target`: Observarble) =
+                            proc() =
                                 `NP`.`updaterName`()
                         )
                         `NP`.`updaterName`()
