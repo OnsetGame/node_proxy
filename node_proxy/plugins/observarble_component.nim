@@ -17,15 +17,11 @@ method componentNodeWillBeRemovedFromSceneView*(c: ObserverComponent) =
     c.added = false
 
 proc subscribe*(c: ObserverComponent, cb: ObserverHandler) =
-    if c.subscriptions.isNil:
-        c.subscriptions = @[]
     c.subscriptions.add(cb)
     if c.added:
         c.target.subscribe(c, cb)
 
 proc subscribe*(c: ObserverComponent, cb: openarray[ObserverHandler]) =
-    if c.subscriptions.isNil:
-        c.subscriptions = @[]
     c.subscriptions.add(cb)
     if c.added:
         for cc in cb:

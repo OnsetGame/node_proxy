@@ -67,8 +67,6 @@ proc isPublic*(prop: NimNode): bool =
 var pluginsRegistry {.compiletime.} = initOrderedTable[string, seq[NodeProxyPlugin]]()
 proc registerPlugin*(prop: string, plugin: NodeProxyPlugin) {.compiletime.} =
     var reg = pluginsRegistry.getOrDefault(prop)
-    if reg.isNil:
-        reg = @[]
     reg.add(plugin)
     pluginsRegistry[prop] = reg
 
