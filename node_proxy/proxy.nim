@@ -23,20 +23,14 @@ proc new*(T: typedesc[NodeProxy], node: Node): T =
 template getType(T, TT): untyped =
     type T* = ref object of TT
 
-
-proc getPropDef(n: NimNode): NimNode =
+proc getPropDef(name, typ: NimNode, public: bool): NimNode =
     result = nnkIdentDefs.newTree()
-    case n.kind:
-        of nnkCommand:
-            result.add(n[0]).add(n[1])
-        of nnkInfix:
-            result.add(
-                nnkPostfix.newTree(ident("*"), n[1])
-            ).add(n[2])
-        else:
-            discard
+    if public:
+        result.add(nnkPostfix.newTree(ident("*"), name))
+    else:
+        result.add(name)
+    result.add(typ)
     result.add(newEmptyNode())
-
 
 proc toNodeProxy(x: NimNode, y: NimNode = nil): NimNode =
     let res = nnkStmtList.newTree()
@@ -84,47 +78,54 @@ proc toNodeProxy(x: NimNode, y: NimNode = nil): NimNode =
             for propItem in pluginData.propBody:
                 init.add(propItem)
 
+    proc getPluginDataProps(n: NimNode): OrderedTable[string, NimNode] =
+        n.expectKind(nnkTableConstr)
+        result = initOrderedTable[string, NimNode]()
+        for pp in n:
+            pp.expectKind(nnkExprColonExpr)
+            pp[0].expectKind(nnkIdent)
+            result[$pp[0].ident] = pp[1]
+
+    proc flattenCommands(n: NimNode, kinds: set[NimNodeKind], res: var seq[NimNode]) =
+        if n.kind in kinds:
+            for c in n: flattenCommands(c, kinds, res)
+        else:
+            res.add(n)
+
     for p in y:
-        case p[0].kind:
-            of nnkIdent:
-                pluginData.prop = p.getPropDef()
-                let morePropsIndex = if p[0].eqIdent("*"): 3 else: 2
-                if p.len > morePropsIndex:
-                    for k in p[morePropsIndex]:
-                        k.expectKind(nnkCall)
-                        k[0].expectKind(nnkTableConstr)
-                        
-                        pluginData.props = initOrderedTable[string, NimNode]()
-                        for pp in k[0]:
-                            pp.expectKind(nnkExprColonExpr)
-                            pp[0].expectKind(nnkIdent)
-                            pluginData.props[$pp[0].ident] = pp[1]
-                        
-                        pluginData.propBody = nil
-                        if k.len > 1:
-                            k[1].expectKind(nnkStmtList)
-                            pluginData.propBody = k[1]
+        var args: seq[NimNode]
+        flattenCommands(p, {nnkCommand, nnkInfix}, args)
+        var i = 0
 
-                        applyPlugins()
+        var public = false
+        if args[i].kind == nnkIdent and $args[i] == "*":
+            public = true
+            inc i
 
-            of nnkCommand, nnkInfix:
-                pluginData.prop = p[0].getPropDef()
-                p[1].expectKind(nnkTableConstr)
+        let name = args[i]
+        inc i
 
-                pluginData.props = initOrderedTable[string, NimNode]()
-                for pp in p[1]:
-                    pp.expectKind(nnkExprColonExpr)
-                    pp[0].expectKind(nnkIdent)
-                    pluginData.props[$pp[0].ident] = pp[1]
-                
-                pluginData.propBody = nil
-                if p.len > 2:
-                    p[2].expectKind(nnkStmtList)
-                    pluginData.propBody = p[2]
+        let typ = args[i]
+        inc i
 
+        pluginData.prop = getPropDef(name, typ, public)
+
+        if i < args.len:
+            let arg = args[i]
+            if arg.kind == nnkStmtList:
+                for c in arg:
+                    flattenCommands(c, {nnkCall}, args)
+                inc i
+
+            while i < args.len:
+                pluginData.props = getPluginDataProps(args[i])
+                inc i
+                if i < args.len and args[i].kind == nnkStmtList:
+                    pluginData.propBody = args[i]
+                    inc i
+                else:
+                    pluginData.propBody = nil
                 applyPlugins()
-            else:
-                error "Unexpected AST\n" & treeRepr(p)
 
         typeProps.add(pluginData.prop)
 
@@ -153,11 +154,11 @@ macro nodeProxy*(x: untyped, y: untyped = nil): untyped =
 ]#
 
 when isMainModule:
-    import rod.node
-    import rod.viewport
-    import rod.rod_types
-    import rod.component
-    import rod.component / [ sprite, solid, camera, text_component ]
+    import rod/node
+    import rod/viewport
+    import rod/rod_types
+    import rod/component
+    import rod/component / [ sprite, solid, camera, text_component ]
     import nimx / [ animation, types, matrixes ]
     import observarble
 
