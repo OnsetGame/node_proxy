@@ -2,17 +2,17 @@ import rod / [component, node]
 import observarble
 
 
-type ObserverComponent* = ref object of Component
+type ObserverComponent* = ref object of ScriptComponent
     target*: Observarble
     subscriptions*: seq[ObserverHandler]
     added: bool
 
-method componentNodeWasAddedToSceneView*(c: ObserverComponent) = 
+method componentNodeWasAddedToSceneView*(c: ObserverComponent) =
     for cb in c.subscriptions:
         c.target.subscribe(c, cb)
     c.added = true
 
-method componentNodeWillBeRemovedFromSceneView*(c: ObserverComponent) = 
+method componentNodeWillBeRemovedFromSceneView*(c: ObserverComponent) =
     c.target.unsubscribe(c)
     c.added = false
 
